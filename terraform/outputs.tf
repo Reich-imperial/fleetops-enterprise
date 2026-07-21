@@ -17,3 +17,15 @@ output "nat_gateway_ids" {
 output "vpc_endpoints_security_group_id" {
   value = module.networking.vpc_endpoints_security_group_id
 }
+
+output "alb_security_group_id" {
+  value = module.security.alb_security_group_id
+}
+
+output "app_security_group_id" {
+  value = module.security.app_security_group_id
+}
+
+output "ec2_instance_profile_name" {
+  value = module.security.ec2_instance_profile_name
+}
