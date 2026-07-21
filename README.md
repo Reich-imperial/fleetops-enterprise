@@ -16,9 +16,26 @@ report (fuel usage, route summary, driver performance, maintenance flags) and
 emails it to the fleet admin. This single feature is the reason nearly every
 service below exists — not a disconnected service demo.
 
+## Current state
+
+Phases 1-4 are built: networking, security, compute, and container/ECR are
+implemented. Phases 5+ remain future work, including database, caching,
+advanced edge, secrets, monitoring, and event-driven reporting.
+
 ## Architecture
 
-See `diagrams/` for the current architecture diagram (updated each phase).
+See `diagrams/` for phase-specific architecture diagrams:
+
+![Phase 1&2 networking and security](diagrams/Phase%201%262%20Fleetops-enterprise.png)
+
+![Phase 3 compute, ALB, target group, ASG](diagrams/Fleetops%20phase%203.png)
+
+![Current architecture including phase 4 container/ECR](diagrams/Fleetops%20architecture.png)
+
+Note: the diagram filenames contain spaces and are URL-encoded in markdown so
+they render correctly. The extra `*.png:Zone.Identifier` files in `diagrams/`
+are Windows metadata artifacts from copying files between Windows and Ubuntu;
+they can be ignored.
 
 - **Networking**: VPC, public/private subnets (2 AZs), IGW, NAT Gateway, VPC
   Endpoints (S3, ECR, SSM)
@@ -73,10 +90,10 @@ Terraform-managed state is the final artifact per phase.
 
 | Phase | Scope                                                   | Status |
 |-------|----------------------------------------------------------|--------|
-| 1     | Networking foundation                                     | ✅ scaffolded, not yet applied |
-| 2     | Security foundation (SGs, NACLs, IAM, Session Manager)     | ⬜ |
-| 3     | Compute + ALB + ASG                                        | ⬜ |
-| 4     | Containerize + ECR + Terraform                             | ⬜ |
+| 1     | Networking foundation                                     | ✅ complete |
+| 2     | Security foundation (SGs, NACLs, IAM, Session Manager)     | ✅ complete |
+| 3     | Compute + ALB + ASG                                        | ✅ complete |
+| 4     | Containerize + ECR + Terraform                             | ✅ complete |
 | 5     | RDS Multi-AZ + read replica + ElastiCache                  | ⬜ |
 | 6     | S3 + lifecycle + CI/CD via ASG Instance Refresh             | ⬜ |
 | 7     | Route 53 + ACM + CloudFront                                 | ⬜ |
