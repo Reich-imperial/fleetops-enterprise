@@ -107,14 +107,9 @@ resource "aws_autoscaling_group" "app_asg" {
   }
 }
 
-# If a DB secret ARN and EC2 role name are provided, create a scoped IAM policy
-locals {
-  attach_db_secret_policy = var.db_secret_arn != null && var.db_secret_arn != "" && var.ec2_role_name != null && var.ec2_role_name != ""
-}
-
+// Create a scoped IAM policy granting read access to the DB secret and optional KMS decrypt.
+// The policy resources fall back to "*" if specific ARNs are not known at plan time.
 data "aws_iam_policy_document" "db_secret_access" {
-  count = local.attach_db_secret_policy ? 1 : 0
-
   statement {
     sid = "AllowGetSecretValue"
     actions = [
@@ -122,7 +117,7 @@ data "aws_iam_policy_document" "db_secret_access" {
       "secretsmanager:DescribeSecret",
       "secretsmanager:ListSecretVersionIds"
     ]
-    resources = [var.db_secret_arn]
+    resources = var.db_secret_arn != null && var.db_secret_arn != "" ? [var.db_secret_arn] : ["*"]
   }
 
   statement {
@@ -133,15 +128,11 @@ data "aws_iam_policy_document" "db_secret_access" {
 }
 
 resource "aws_iam_policy" "db_secret_access" {
-  count = local.attach_db_secret_policy ? 1 : 0
-
   name   = "${local.name}-db-secret-access"
-  policy = data.aws_iam_policy_document.db_secret_access[0].json
+  policy = data.aws_iam_policy_document.db_secret_access.json
 }
 
 resource "aws_iam_role_policy_attachment" "attach_db_secret_policy" {
-  count = local.attach_db_secret_policy ? 1 : 0
-
   role       = var.ec2_role_name
-  policy_arn = aws_iam_policy.db_secret_access[0].arn
+  policy_arn = aws_iam_policy.db_secret_access.arn
 }

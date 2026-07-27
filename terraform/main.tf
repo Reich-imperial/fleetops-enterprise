@@ -19,8 +19,6 @@ module "security" {
   environment  = var.environment
   vpc_id       = module.networking.vpc_id
   vpc_cidr     = module.networking.vpc_cidr
-  db_secret_arn = module.database.db_secret_arn
-  kms_key_arn   = var.db_kms_key_arn
 
   # app_port and alb_ingress_cidrs use module defaults (3000, 0.0.0.0/0)
   # until Phase 3 makes the actual app port a real decision.
