@@ -34,3 +34,15 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "db_secret_arn" {
+  type        = string
+  default     = null
+  description = "Optional ARN of the Secrets Manager secret that contains DB credentials. If set, the Secrets Manager IAM policy will be scoped to this ARN."
+}
+
+variable "kms_key_arn" {
+  type        = string
+  default     = null
+  description = "Optional KMS key ARN used to encrypt the DB secret. If set, the KMS permissions will be scoped to this ARN."
+}

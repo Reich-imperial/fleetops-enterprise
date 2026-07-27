@@ -26,3 +26,20 @@ variable "private_subnet_ids" { type = list(string) }
 variable "alb_security_group_id" { type = string }
 variable "app_security_group_id" { type = string }
 variable "ec2_instance_profile_name" { type = string }
+
+# Optional: the EC2 IAM role name to attach additional policies to (role created in security module)
+variable "ec2_role_name" {
+  type    = string
+  default = null
+}
+
+# Optional: DB secret and KMS ARNs so compute can attach a scoped policy to the EC2 role
+variable "db_secret_arn" {
+  type    = string
+  default = null
+}
+
+variable "db_kms_key_arn" {
+  type    = string
+  default = null
+}

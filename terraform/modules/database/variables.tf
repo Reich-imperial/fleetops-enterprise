@@ -1,18 +1,18 @@
 variable "project_name" {
-  type = string
+  type        = string
   description = "Used for resource naming and tagging, consistent with other modules"
 }
 
 variable "environment" {
-  type = string
+  type        = string
   description = "Used for resource naming and tagging, consistent with other modules"
 }
 variable "private_subnet_ids" {
-  type = list(string)
+  type        = list(string)
   description = "List of private subnet IDs from the networking module to deploy the RDS instance into"
 }
 variable "db_security_group_id" {
-  type = string
+  type        = string
   description = "The db-sg security group ID to associate with the RDS instance. Scoped to accept only from app-sg"
 }
 
@@ -26,7 +26,7 @@ variable "db_allocated_storage" {
   type        = number
   default     = 20
   description = "Storage in GB, no autoscaling - kept deterministic per ADR-005."
-}  
+}
 variable "db_engine_version" {
   type        = string
   default     = "15.4"
@@ -40,7 +40,7 @@ variable "db_name" {
 variable "db_username" {
   type        = string
   description = "Database username, must match what fleet-platform backend expects"
-}      
+}
 variable "backup_retention_period" {
   type        = number
   default     = 1
@@ -50,4 +50,10 @@ variable "deletion_protection" {
   type        = bool
   default     = false
   description = "false by default for this learning project (matches the teardown workflow you're using). Flip to true deliberately if this ever needs to survive accidental deletes."
+}
+
+variable "existing_db_secret_arn" {
+  type        = string
+  default     = null
+  description = "If set, the database module will read credentials from this existing Secrets Manager secret instead of creating a new secret. The secret must contain a JSON object with 'username' and 'password' keys."
 }

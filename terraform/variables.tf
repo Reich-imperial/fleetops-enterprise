@@ -59,3 +59,39 @@ variable "app_asg_desired_capacity" {
   type    = number
   default = 3
 }
+
+variable "db_username" {
+  type        = string
+  default     = "fleetops"
+  description = "Database username for the RDS instance created by the database module"
+}
+
+variable "db_instance_class" {
+  type        = string
+  default     = "db.t3.micro"
+  description = "RDS instance class for the database module"
+}
+
+variable "db_allocated_storage" {
+  type        = number
+  default     = 20
+  description = "Allocated storage (GB) for the RDS instance"
+}
+
+variable "db_engine_version" {
+  type        = string
+  default     = "15.4"
+  description = "Postgres engine version for RDS"
+}
+
+variable "db_name" {
+  type        = string
+  default     = "fleetops"
+  description = "Database name for RDS"
+}
+
+variable "db_kms_key_arn" {
+  type        = string
+  default     = null
+  description = "Optional KMS key ARN used to encrypt DB secrets. If set, security module will scope KMS permissions to this ARN."
+}

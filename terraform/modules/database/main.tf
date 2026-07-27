@@ -1,29 +1,48 @@
-resource "random_password" "db" {
-    length = 20
-    special = true
-    #RDS disallows some special characters(/,@,"",space), so we exclude them here..
-    override_special = "!#$%^&*()-_=+[]{};:,.<>?"
-  
+ 
+// Allow using an existing Secrets Manager secret (JSON with username/password)
+locals {
+  use_existing_secret = var.existing_db_secret_arn != null && var.existing_db_secret_arn != ""
 }
+
+data "aws_secretsmanager_secret_version" "existing" {
+  count     = local.use_existing_secret ? 1 : 0
+  secret_id = var.existing_db_secret_arn
+}
+
+resource "random_password" "db" {
+  count   = local.use_existing_secret ? 0 : 1
+  length  = 20
+  special = true
+  override_special = "!#$%^&*()-_=+[]{};:,.<>?"
+}
+
 // Ensure tags variable is declared for module usage
 variable "tags" {
-    description = "Tags to apply to created resources"
-    type        = map(string)
-    default     = {}
+  description = "Tags to apply to created resources"
+  type        = map(string)
+  default     = {}
 }
-resource "aws_secretsmanager_secret" "db" {
-    name = "${var.project_name}/${var.environment}/db-credentials"
-    description = "RDS database credentials for ${var.project_name} in ${var.environment}"
-    tags = var.tags
 
-  
+resource "aws_secretsmanager_secret" "db" {
+  count       = local.use_existing_secret ? 0 : 1
+  name        = "${var.project_name}/${var.environment}/db-credentials"
+  description = "RDS database credentials for ${var.project_name} in ${var.environment}"
+  tags        = var.tags
 }
+
 resource "aws_secretsmanager_secret_version" "db" {
-    secret_id     = aws_secretsmanager_secret.db.id
-    secret_string = jsonencode({
-        username = var.db_username
-        password = random_password.db.result
-    })
+  count = local.use_existing_secret ? 0 : 1
+  secret_id = aws_secretsmanager_secret.db[0].id
+  secret_string = jsonencode({
+    username = var.db_username
+    password = random_password.db[0].result
+  })
+}
+
+locals {
+  db_creds = local.use_existing_secret ? jsondecode(data.aws_secretsmanager_secret_version.existing[0].secret_string) : null
+  db_username_resolved = local.use_existing_secret ? local.db_creds.username : var.db_username
+  db_password_resolved = local.use_existing_secret ? local.db_creds.password : random_password.db[0].result
 }
 resource "aws_db_subnet_group" "this" {
   name       = "${var.project_name}-db-subnet-group"
@@ -43,8 +62,8 @@ resource "aws_db_instance" "primary" {
   storage_type      = "gp3"
 
   db_name  = var.db_name
-  username = var.db_username
-  password = random_password.db.result
+  username = local.db_username_resolved
+  password = local.db_password_resolved
 
   multi_az               = true
   db_subnet_group_name   = aws_db_subnet_group.this.name

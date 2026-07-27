@@ -14,7 +14,7 @@ output "replica_endpoint" {
 }
 
 output "db_secret_arn" {
-  value       = aws_secretsmanager_secret.db.arn
+  value       = try(aws_secretsmanager_secret.db[0].arn, var.existing_db_secret_arn)
   description = "ARN of the Secrets Manager secret holding username+password. Compute module or app runtime can fetch credentials from here instead of plaintext."
 }
 

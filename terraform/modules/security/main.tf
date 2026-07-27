@@ -146,6 +146,34 @@ resource "aws_iam_role_policy_attachment" "ecr_read_only" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
+data "aws_iam_policy_document" "secretsmanager_read" {
+  statement {
+    sid = "SecretsManagerReadAccess"
+    actions = [
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:ListSecrets",
+      "secretsmanager:ListSecretVersionIds"
+    ]
+    resources = var.db_secret_arn != null && var.db_secret_arn != "" ? [var.db_secret_arn] : ["*"]
+  }
+
+  statement {
+    sid = "KMSDecryptIfNeeded"
+    actions = [
+      "kms:Decrypt"
+    ]
+    resources = var.kms_key_arn != null && var.kms_key_arn != "" ? [var.kms_key_arn] : ["*"]
+    # Note: This is permissive; restrict the KMS key ARN if you need tighter scope.
+  }
+}
+
+resource "aws_iam_role_policy" "secretsmanager_read" {
+  name = "${local.name}-secretsmanager-read"
+  role = aws_iam_role.ec2.name
+  policy = data.aws_iam_policy_document.secretsmanager_read.json
+}
+
 resource "aws_iam_instance_profile" "ec2" {
   name = "${local.name}-ec2-profile"
   role = aws_iam_role.ec2.name

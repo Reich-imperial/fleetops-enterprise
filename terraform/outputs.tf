@@ -45,3 +45,18 @@ output "app_asg_name" {
 output "ec2_instance_profile_name" {
   value = module.security.ec2_instance_profile_name
 }
+
+output "db_primary_endpoint" {
+  value       = module.database.primary_endpoint
+  description = "Primary RDS endpoint (host:port)"
+}
+
+output "db_primary_address" {
+  value       = module.database.primary_address
+  description = "Primary RDS hostname"
+}
+
+output "db_secret_arn" {
+  value       = module.database.db_secret_arn
+  description = "Secrets Manager ARN for DB credentials"
+}

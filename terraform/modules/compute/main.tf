@@ -106,3 +106,42 @@ resource "aws_autoscaling_group" "app_asg" {
     propagate_at_launch = true
   }
 }
+
+# If a DB secret ARN and EC2 role name are provided, create a scoped IAM policy
+locals {
+  attach_db_secret_policy = var.db_secret_arn != null && var.db_secret_arn != "" && var.ec2_role_name != null && var.ec2_role_name != ""
+}
+
+data "aws_iam_policy_document" "db_secret_access" {
+  count = local.attach_db_secret_policy ? 1 : 0
+
+  statement {
+    sid = "AllowGetSecretValue"
+    actions = [
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:ListSecretVersionIds"
+    ]
+    resources = [var.db_secret_arn]
+  }
+
+  statement {
+    sid = "AllowKMSDecrypt"
+    actions = ["kms:Decrypt"]
+    resources = var.db_kms_key_arn != null && var.db_kms_key_arn != "" ? [var.db_kms_key_arn] : ["*"]
+  }
+}
+
+resource "aws_iam_policy" "db_secret_access" {
+  count = local.attach_db_secret_policy ? 1 : 0
+
+  name   = "${local.name}-db-secret-access"
+  policy = data.aws_iam_policy_document.db_secret_access[0].json
+}
+
+resource "aws_iam_role_policy_attachment" "attach_db_secret_policy" {
+  count = local.attach_db_secret_policy ? 1 : 0
+
+  role       = var.ec2_role_name
+  policy_arn = aws_iam_policy.db_secret_access[0].arn
+}
