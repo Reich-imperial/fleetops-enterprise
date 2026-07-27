@@ -62,6 +62,55 @@ resource "aws_security_group" "app" {
 
   tags = merge(local.common_tags, { Name = "${local.name}-app-sg" })
 }
+resource "aws_security_group" "db" {
+  name        = "${var.project_name}-db-sg"
+  description = "Allows PostgreSQL access from app tier only"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description     = "PostgreSQL from app tier"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-db-sg"
+  })
+}
+
+resource "aws_security_group" "cache" {
+  name        = "${var.project_name}-cache-sg"
+  description = "Allows Redis access from app tier only"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description     = "Redis from app tier"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-cache-sg"
+  })
+}
 
 # ---------------------------------------------------------------------------
 # IAM role + instance profile for EC2 — enables Session Manager, no bastion,
