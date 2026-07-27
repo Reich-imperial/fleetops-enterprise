@@ -1,4 +1,4 @@
-# FleetOps Enterprise
+# 🚚 FleetOps Enterprise
 
 Production-grade AWS infrastructure for Fleet Platform's trip-completion
 reporting feature — an 11-phase capstone designed for AWS SAA-C03 prep and
@@ -8,21 +8,31 @@ DevOps/Cloud portfolio work.
 > production-grade infrastructure spanning networking, data resiliency,
 > event-driven reporting, edge protection, and observability.
 
-## Why this project matters
+## 💡 Why this project matters
 
 When a trip transitions to `completed`, an asynchronous pipeline generates a PDF
 report covering fuel usage, route summary, driver performance, and maintenance
 flags, then notifies the fleet admin. Nearly every service in this architecture
 exists to support that business flow.
 
-## Architecture at a glance
+## 📚 Documentation hub
+
+The [docs/decisions](docs/decisions) folder holds the architectural decision
+records (ADRs) for the major choices behind this platform. These documents
+capture the reasoning, trade-offs, and future direction of the design so the
+infrastructure remains understandable as it evolves.
+
+- [docs/decisions](docs/decisions) — stores ADRs for important infrastructure decisions
+- [docs/decisions/adr-005-data-layer-architecture.md](docs/decisions/adr-005-data-layer-architecture.md) — documents the Phase 5 data layer choices for RDS, Redis, replicas, and security groups
+
+## 🏗️ Architecture at a glance
 
 The main FleetOps architecture diagram below shows the end-to-end design for
 this platform:
 
 ![FleetOps Enterprise Architecture](diagrams/FleetOps_Enterprise_Architecture.png)
 
-### Architecture highlights
+### ✨ Architecture highlights
 
 - **Networking**: VPC, public/private subnets across 2 AZs, IGW, NAT Gateway,
   and VPC Endpoints for S3, ECR, and SSM
@@ -47,14 +57,14 @@ See the phase-by-phase visuals in the [diagrams](diagrams) folder:
 - ![Phase 4 container and ECR architecture](diagrams/FleetOps_Phase_4.png)
 - ![Phase 5 database and caching architecture](diagrams/FleetOps_Phase_5.png)
 
-## Current state
+## ✅ Current state
 
 Phases 1-5 are now implemented: networking, security, compute, container/ECR,
 and the database + caching foundation are all in place. Phases 6+ continue as
 progressive enhancements for storage, edge, secrets, monitoring, and
 event-driven reporting.
 
-## Repo layout
+## 📦 Repo layout
 
 ```text
 terraform/
@@ -80,14 +90,14 @@ diagrams/            architecture visuals updated by phase
   workflows/         Terraform plan/apply, Docker build/push, ASG refresh
 ```
 
-## Build method
+## 🔧 Build method
 
 Console-first for genuinely new services such as networking, RDS, or WAF, then
 tear down the initial console resources and codify them in Terraform with
 proper references. Terraform-managed state is the final source of truth for each
 phase.
 
-## Phase tracker
+## 🧭 Phase tracker
 
 | Phase | Scope | Status |
 |-------|-------|--------|
@@ -103,14 +113,14 @@ phase.
 | 10 | SQS + Lambda + SNS event-driven reports | ⏳ Planned |
 | 11 | Backups + capstone (diagram, ADRs, cost, README, demo) | ⏳ Planned |
 
-## Deliberate scope cuts
+## ⚠️ Deliberate scope cuts
 
 No GuardDuty, AWS Config, Shield, OpenSearch, or k6 are included in the current
 scope. No live AZ-failure/DR drill is executed here; RPO/RTO are documented
 instead. No Kubernetes workload is included in this repo, and a single Terraform
 environment is used for the current implementation.
 
-## Related repos
+## 🔗 Related repos
 
 - `fleet-platform` — the application this infrastructure serves
 - `k8s-learning` — Kubernetes track (Minikube → Helm → EKS)
