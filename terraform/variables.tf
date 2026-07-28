@@ -80,7 +80,7 @@ variable "db_allocated_storage" {
 
 variable "db_engine_version" {
   type        = string
-  default     = "15.4"
+  default     = "16.14"
   description = "Postgres engine version for RDS"
 }
 
@@ -94,4 +94,15 @@ variable "db_kms_key_arn" {
   type        = string
   default     = null
   description = "Optional KMS key ARN used to encrypt DB secrets. If set, security module will scope KMS permissions to this ARN."
+}
+variable "cache_node_type" {
+  type        = string
+  default     = "cache.t3.micro"
+  description = "ElastiCache node type, per ADR-005."
+}
+
+variable "cache_engine_version" {
+  type        = string
+  default     = "7.1"
+  description = "Redis engine version — must match fleet-platform's docker-compose Redis image tag."
 }

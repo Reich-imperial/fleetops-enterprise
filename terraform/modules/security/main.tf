@@ -62,8 +62,9 @@ resource "aws_security_group" "app" {
 
   tags = merge(local.common_tags, { Name = "${local.name}-app-sg" })
 }
+
 resource "aws_security_group" "db" {
-  name        = "${var.project_name}-db-sg"
+  name        = "${local.name}-db-sg"
   description = "Allows PostgreSQL access from app tier only"
   vpc_id      = var.vpc_id
 
@@ -82,13 +83,11 @@ resource "aws_security_group" "db" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(var.tags, {
-    Name = "${var.project_name}-db-sg"
-  })
+  tags = merge(local.common_tags, { Name = "${local.name}-db-sg" })
 }
 
 resource "aws_security_group" "cache" {
-  name        = "${var.project_name}-cache-sg"
+  name        = "${local.name}-cache-sg"
   description = "Allows Redis access from app tier only"
   vpc_id      = var.vpc_id
 
@@ -107,11 +106,8 @@ resource "aws_security_group" "cache" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(var.tags, {
-    Name = "${var.project_name}-cache-sg"
-  })
+  tags = merge(local.common_tags, { Name = "${local.name}-cache-sg" })
 }
-
 # ---------------------------------------------------------------------------
 # IAM role + instance profile for EC2 — enables Session Manager, no bastion,
 # no port 22 anywhere. This is the mechanism, not just a policy attachment:
@@ -146,7 +142,40 @@ resource "aws_iam_role_policy_attachment" "ecr_read_only" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
- 
+data "aws_iam_policy_document" "db_secret_access" {
+  statement {
+    sid = "AllowGetSecretValue"
+    actions = [
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:ListSecretVersionIds"
+    ]
+    resources = [var.db_secret_arn]
+  }
+
+  statement {
+    sid       = "AllowKMSDecrypt"
+    actions   = ["kms:Decrypt"]
+    resources = [var.db_kms_key_arn]
+  }
+}
+
+resource "aws_iam_policy" "db_secret_access" {
+  name   = "${local.name}-db-secret-access"
+  policy = data.aws_iam_policy_document.db_secret_access.json
+
+  lifecycle {
+    precondition {
+      condition     = var.db_secret_arn != null && var.db_secret_arn != "" && var.db_kms_key_arn != null && var.db_kms_key_arn != ""
+      error_message = "db_secret_arn and db_kms_key_arn must be set to specific ARNs before attaching database access permissions to the EC2 role."
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "attach_db_secret_policy" {
+  role       = aws_iam_role.ec2.name
+  policy_arn = aws_iam_policy.db_secret_access.arn
+}
 
 resource "aws_iam_instance_profile" "ec2" {
   name = "${local.name}-ec2-profile"

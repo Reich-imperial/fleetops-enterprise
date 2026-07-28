@@ -12,13 +12,33 @@ module "networking" {
   # Override here later if the single-NAT ADR conclusion changes.
 }
 
-module "security" {
-  source = "./modules/security"
+module "database" {
+  source = "./modules/database"
 
   project_name = var.project_name
   environment  = var.environment
-  vpc_id       = module.networking.vpc_id
-  vpc_cidr     = module.networking.vpc_cidr
+  tags         = var.tags
+
+  db_instance_class    = var.db_instance_class
+  db_allocated_storage = var.db_allocated_storage
+  db_engine_version    = var.db_engine_version
+  db_name              = var.db_name
+  db_username          = var.db_username
+
+  private_subnet_ids = module.networking.private_subnet_ids
+
+  db_security_group_id = module.security.db_security_group_id
+}
+
+module "security" {
+  source = "./modules/security"
+
+  project_name   = var.project_name
+  environment    = var.environment
+  vpc_id         = module.networking.vpc_id
+  vpc_cidr       = module.networking.vpc_cidr
+  db_secret_arn  = module.database.db_secret_arn
+  db_kms_key_arn = module.database.db_kms_key_arn
 
   # app_port and alb_ingress_cidrs use module defaults (3000, 0.0.0.0/0)
   # until Phase 3 makes the actual app port a real decision.
@@ -48,25 +68,17 @@ module "compute" {
   alb_security_group_id     = module.security.alb_security_group_id
   app_security_group_id     = module.security.app_security_group_id
   ec2_instance_profile_name = module.security.ec2_instance_profile_name
-  ec2_role_name             = module.security.ec2_iam_role_name
-  db_secret_arn             = module.database.db_secret_arn
-  db_kms_key_arn            = var.db_kms_key_arn
 }
-
-module "database" {
-  source = "./modules/database"
+module "storage" {
+  source = "./modules/storage"
 
   project_name = var.project_name
   environment  = var.environment
   tags         = var.tags
 
-  db_instance_class   = var.db_instance_class
-  db_allocated_storage = var.db_allocated_storage
-  db_engine_version   = var.db_engine_version
-  db_name             = var.db_name
-  db_username         = var.db_username
+  private_subnet_ids      = module.networking.private_subnet_ids
+  cache_security_group_id = module.security.cache_security_group_id
 
-  private_subnet_ids   = module.networking.private_subnet_ids
-
-  db_security_group_id = module.security.db_security_group_id
+  cache_node_type      = var.cache_node_type
+  cache_engine_version = var.cache_engine_version
 }

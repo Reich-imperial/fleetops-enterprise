@@ -60,3 +60,11 @@ output "db_secret_arn" {
   value       = module.database.db_secret_arn
   description = "Secrets Manager ARN for DB credentials"
 }
+output "cache_primary_endpoint" {
+  value       = module.storage.cache_primary_endpoint
+  description = "Redis primary endpoint — combine with cache_port for REDIS_URL."
+}
+
+output "cache_port" {
+  value = module.storage.cache_port
+}

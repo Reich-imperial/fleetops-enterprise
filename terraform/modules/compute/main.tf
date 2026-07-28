@@ -106,33 +106,3 @@ resource "aws_autoscaling_group" "app_asg" {
     propagate_at_launch = true
   }
 }
-
-// Create a scoped IAM policy granting read access to the DB secret and optional KMS decrypt.
-// The policy resources fall back to "*" if specific ARNs are not known at plan time.
-data "aws_iam_policy_document" "db_secret_access" {
-  statement {
-    sid = "AllowGetSecretValue"
-    actions = [
-      "secretsmanager:GetSecretValue",
-      "secretsmanager:DescribeSecret",
-      "secretsmanager:ListSecretVersionIds"
-    ]
-    resources = var.db_secret_arn != null && var.db_secret_arn != "" ? [var.db_secret_arn] : ["*"]
-  }
-
-  statement {
-    sid = "AllowKMSDecrypt"
-    actions = ["kms:Decrypt"]
-    resources = var.db_kms_key_arn != null && var.db_kms_key_arn != "" ? [var.db_kms_key_arn] : ["*"]
-  }
-}
-
-resource "aws_iam_policy" "db_secret_access" {
-  name   = "${local.name}-db-secret-access"
-  policy = data.aws_iam_policy_document.db_secret_access.json
-}
-
-resource "aws_iam_role_policy_attachment" "attach_db_secret_policy" {
-  role       = var.ec2_role_name
-  policy_arn = aws_iam_policy.db_secret_access.arn
-}

@@ -35,3 +35,15 @@ variable "tags" {
   default = {}
 }
 
+variable "db_secret_arn" {
+  description = "ARN of the Secrets Manager secret that the EC2 role should read"
+  type        = string
+  default     = null
+}
+
+variable "db_kms_key_arn" {
+  description = "ARN of the KMS key that the EC2 role may use to decrypt the database secret"
+  type        = string
+  default     = null
+}
+

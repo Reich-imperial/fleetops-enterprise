@@ -51,9 +51,3 @@ variable "deletion_protection" {
   default     = false
   description = "false by default for this learning project (matches the teardown workflow you're using). Flip to true deliberately if this ever needs to survive accidental deletes."
 }
-
-variable "existing_db_secret_arn" {
-  type        = string
-  default     = null
-  description = "If set, the database module will read credentials from this existing Secrets Manager secret instead of creating a new secret. The secret must contain a JSON object with 'username' and 'password' keys."
-}

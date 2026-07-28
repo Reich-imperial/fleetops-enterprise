@@ -145,3 +145,40 @@ This ADR captures four deliberate infrastructure decisions made during Phase 5:
 - Separate security groups for the database and cache tiers
 
 Together, these decisions prioritize production-inspired architecture, explicit trade-offs, and cost-conscious implementation while remaining aligned with the learning objectives of FleetOps Enterprise.
+
+---
+
+## Implementation Update — Terraform (Post-Console Validation)
+
+The console-validated design in this ADR was translated into Terraform across `modules/database`, `modules/storage`, and `modules/security`. Applied cleanly: 45 resources created, 0 changed, 0 destroyed.
+
+### Security Group Regression Caught Pre-Apply
+
+During Terraform authoring, an initial fix for an unrelated module dependency ordering issue inadvertently widened `db-sg` and `cache-sg` ingress rules from `security_groups = [app-sg]` to `cidr_blocks = ["10.0.0.0/16"]` — accepting traffic from anywhere in the VPC rather than the app tier only.
+
+This was identified by reviewing the `terraform plan` diff directly rather than relying on the "0 to destroy" summary as a safety signal. The fix was corrected by keeping both security groups owned by the `security` module and resolving the dependency ordering without weakening the ingress rule. Post-correction, both groups were verified via CLI to reference the `app-sg` security group ID as the sole source, not a CIDR range.
+
+This reinforces a general principle worth carrying forward: a "safe-looking" plan summary (create-only, nothing destroyed) does not guarantee the rules themselves are unchanged in intent — only a line-by-line diff catches a least-privilege regression like this one.
+
+### Credential Management
+
+Database credentials are generated via Terraform's `random_password` resource and stored in AWS Secrets Manager, using manual integration rather than RDS's native `manage_master_user_password` flag. This was a deliberate choice to make the underlying mechanics (password generation, secret storage, IAM read access) explicit for SAA-C03 study purposes, rather than abstracting them behind a single managed flag.
+
+Secret recovery window is set to 0 days (immediate deletion on destroy) to support this project's repeated build-and-teardown cycle during learning iterations, rather than the default 30-day recovery hold.
+
+### Post-Apply Verification
+
+- RDS primary: `available`, Multi-AZ confirmed across two Availability Zones
+- Same-region replica: `available`, tracking primary
+- `db-sg` / `cache-sg`: inbound source confirmed via CLI as the `app-sg` security group ID, not a CIDR range
+- ElastiCache: `available`, single-node, transit encryption disabled (application expects `redis://`, not `rediss://` — documented as a deliberate simplification; enabling transit encryption later would require both a Terraform change and an application-side connection string and client change, not just a configuration flag)
+
+### Known Follow-On Gap (Not a Phase 5 Defect)
+
+Post-deployment, the backend container crash-loops with:
+
+```text
+Error: Invalid environment configuration: DATABASE_URL: Required, REDIS_URL: Required, JWT_SECRET: Required, JWT_REFRESH_SECRET: Required
+```
+
+This is expected and consistent with the same failure mode observed during Phase 3. Phase 5 delivers the data-layer infrastructure only; injecting Secrets Manager values into the running container at boot is separate, explicitly out-of-scope work reserved for a later phase.
