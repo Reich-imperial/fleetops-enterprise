@@ -27,3 +27,8 @@ output "db_name" {
   value       = aws_db_instance.primary.db_name
   description = "Database name, needed alongside the endpoint to build a full connection string."
 }
+
+output "db_port" {
+  value       = aws_db_instance.primary.port
+  description = "RDS port, needed to build a full DATABASE_URL."
+}

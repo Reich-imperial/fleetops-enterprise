@@ -55,7 +55,7 @@ output "interface_vpc_endpoint_ids" {
 
 output "vpc_endpoints_security_group_id" {
   description = "Security group ID attached to interface VPC endpoints"
-  value       = var.enable_interface_endpoints ? aws_security_group.vpc_endpoints[0].id : null
+  value       = length(aws_security_group.vpc_endpoints) > 0 ? aws_security_group.vpc_endpoints[0].id : null
 }
 
 output "azs" {

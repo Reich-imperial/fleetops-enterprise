@@ -150,7 +150,7 @@ data "aws_iam_policy_document" "db_secret_access" {
       "secretsmanager:DescribeSecret",
       "secretsmanager:ListSecretVersionIds"
     ]
-    resources = [var.db_secret_arn]
+    resources = [var.db_secret_arn, aws_secretsmanager_secret.app_secrets.arn]
   }
 
   statement {
@@ -180,4 +180,29 @@ resource "aws_iam_role_policy_attachment" "attach_db_secret_policy" {
 resource "aws_iam_instance_profile" "ec2" {
   name = "${local.name}-ec2-profile"
   role = aws_iam_role.ec2.name
+}
+resource "random_password" "jwt_secret" {
+  length  = 64
+  special = false
+}
+
+resource "random_password" "jwt_refresh_secret" {
+  length  = 64
+  special = false
+}
+
+resource "aws_secretsmanager_secret" "app_secrets" {
+  name                    = "${var.project_name}/${var.environment}/app-secrets"
+  description             = "Application-level secrets (JWT signing keys) for ${var.project_name} ${var.environment}"
+  recovery_window_in_days = 0
+
+  tags = var.tags
+}
+
+resource "aws_secretsmanager_secret_version" "app_secrets" {
+  secret_id = aws_secretsmanager_secret.app_secrets.id
+  secret_string = jsonencode({
+    jwt_secret         = random_password.jwt_secret.result
+    jwt_refresh_secret = random_password.jwt_refresh_secret.result
+  })
 }

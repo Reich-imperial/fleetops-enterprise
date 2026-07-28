@@ -30,6 +30,13 @@ resource "aws_launch_template" "app" {
     ecr_repository_url  = var.ecr_repository_url
     ecr_repository_host = split("/", var.ecr_repository_url)[0]
     image_tag           = var.image_tag
+    db_secret_arn       = var.db_secret_arn
+    app_secrets_arn     = var.app_secrets_arn
+    db_host             = var.db_host
+    db_port             = var.db_port
+    db_name             = var.db_name
+    cache_host          = var.cache_host
+    cache_port          = var.cache_port
   }))
 
   tag_specifications {

@@ -12,7 +12,9 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
-
+*.tfplan
+tfplan
+plan.txt
 # Keep the lock file — it pins provider versions for reproducible builds
 !.terraform.lock.hcl
 

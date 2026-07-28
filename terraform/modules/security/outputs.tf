@@ -27,3 +27,7 @@ output "cache_security_group_id" {
   value       = aws_security_group.cache.id
   description = "Security group ID for ElastiCache — accepts only from app-sg on port 6379."
 }
+output "app_secrets_arn" {
+  value       = aws_secretsmanager_secret.app_secrets.arn
+  description = "ARN of the Secrets Manager secret holding JWT signing keys — fetched by user_data at instance boot."
+}

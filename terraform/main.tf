@@ -68,6 +68,14 @@ module "compute" {
   alb_security_group_id     = module.security.alb_security_group_id
   app_security_group_id     = module.security.app_security_group_id
   ec2_instance_profile_name = module.security.ec2_instance_profile_name
+
+  db_secret_arn   = module.database.db_secret_arn
+  app_secrets_arn = module.security.app_secrets_arn
+  db_host         = module.database.primary_address
+  db_port         = module.database.db_port
+  db_name         = module.database.db_name
+  cache_host      = module.storage.cache_primary_endpoint
+  cache_port      = 6379
 }
 module "storage" {
   source = "./modules/storage"
